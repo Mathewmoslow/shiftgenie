@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShiftGenie - Server Shift Income Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .control-group {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 18px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .calendar {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .calendar-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .day-header {
+            text-align: center;
+            font-weight: bold;
+            color: #555;
+            padding: 10px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+
+        .day {
+            aspect-ratio: 1;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+            position: relative;
+        }
+
+        .day:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .day.selected {
+            background: #4ade80;
+            border-color: #22c55e;
+            color: white;
+        }
+
+        .day.empty {
+            visibility: hidden;
+        }
+
+        .day-number {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .day-income {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+
+        .suggestions {
+            background: #fef3c7;
+            border: 2px solid #fbbf24;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .suggestions h3 {
+            color: #92400e;
+            margin-bottom: 15px;
+        }
+
+        .suggestion-item {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .suggestion-days {
+            font-weight: bold;
+            color: #059669;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e5e7eb;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ef4444 0%, #fbbf24 50%, #22c55e 100%);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .calendar-grid {
+                gap: 5px;
+            }
+            
+            .day {
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍽️ ShiftGenie</h1>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="expenses">Monthly Expenses Target ($)</label>
+                <input type="number" id="expenses" value="4000" placeholder="Enter monthly expenses">
+            </div>
+            <div class="control-group">
+                <label for="currentDate">Current Date (for planning)</label>
+                <input type="number" id="currentDate" value="15" min="1" max="31" placeholder="Day of month">
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Days Selected</div>
+                <div class="stat-value" id="daysSelected">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Projected Income</div>
+                <div class="stat-value" id="projectedIncome">$0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Remaining Needed</div>
+                <div class="stat-value" id="remainingNeeded">$4000</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Goal Status</div>
+                <div class="stat-value" id="goalStatus">❌</div>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill">0%</div>
+        </div>
+
+        <div class="calendar">
+            <div class="calendar-header">
+                <div class="day-header">Sun</div>
+                <div class="day-header">Mon</div>
+                <div class="day-header">Tue</div>
+                <div class="day-header">Wed</div>
+                <div class="day-header">Thu</div>
+                <div class="day-header">Fri</div>
+                <div class="day-header">Sat</div>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+        </div>
+
+        <div class="suggestions" id="suggestions">
+            <h3>📊 Shift Recommendations</h3>
+            <div id="suggestionsList"></div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #4ade80;"></div>
+                <span>Selected Shift</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: white; border: 2px solid #ddd;"></div>
+                <span>Available Shift</span>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <button onclick="resetCalendar()">Reset Calendar</button>
+        </div>
+    </div>
+
+    <script>
+        // Shift income estimates based on research (dinner shifts 4pm-midnight)
+        const shiftIncomes = {
+            0: 120,  // Sunday
+            1: 70,   // Monday (slowest)
+            2: 80,   // Tuesday
+            3: 90,   // Wednesday
+            4: 100,  // Thursday
+            5: 180,  // Friday (busy weekend)
+            6: 200   // Saturday (busiest)
+        };
+
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        let selectedDays = new Set();
+        let monthlyTarget = 4000;
+        let currentDay = 15;
+
+        function initCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+            
+            const date = new Date();
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            // Add empty cells for days before month starts
+            for (let i = 0; i < firstDay; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'day empty';
+                grid.appendChild(emptyDay);
+            }
+            
+            // Add days of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'day';
+                dayElement.dataset.day = day;
+                
+                const dayOfWeek = new Date(year, month, day).getDay();
+                const income = shiftIncomes[dayOfWeek];
+                
+                dayElement.innerHTML = `
+                    <div class="day-number">${day}</div>
+                    <div class="day-income">$${income}</div>
+                `;
+                
+                dayElement.addEventListener('click', () => toggleDay(day, dayOfWeek));
+                
+                grid.appendChild(dayElement);
+            }
+            
+            updateStats();
+        }
+
+        function toggleDay(day, dayOfWeek) {
+            const dayElement = document.querySelector(`[data-day="${day}"]`);
+            
+            if (selectedDays.has(day)) {
+                selectedDays.delete(day);
+                dayElement.classList.remove('selected');
+            } else {
+                selectedDays.add(day);
+                dayElement.classList.add('selected');
+            }
+            
+            updateStats();
+            generateSuggestions();
+        }
+
+        function updateStats() {
+            const projectedIncome = calculateProjectedIncome();
+            const remaining = Math.max(0, monthlyTarget - projectedIncome);
+            const percentage = Math.min(100, (projectedIncome / monthlyTarget) * 100);
+            
+            document.getElementById('daysSelected').textContent = selectedDays.size;
+            document.getElementById('projectedIncome').textContent = `$${projectedIncome}`;
+            document.getElementById('remainingNeeded').textContent = `$${remaining}`;
+            document.getElementById('goalStatus').textContent = projectedIncome >= monthlyTarget ? '✅' : '❌';
+            
+            const progressFill = document.getElementById('progressFill');
+            progressFill.style.width = `${percentage}%`;
+            progressFill.textContent = `${Math.round(percentage)}%`;
+            
+            // Change progress bar color based on percentage
+            if (percentage >= 100) {
+                progressFill.style.background = '#22c55e';
+            } else if (percentage >= 75) {
+                progressFill.style.background = '#fbbf24';
+            } else {
+                progressFill.style.background = '#ef4444';
+            }
+        }
+
+        function calculateProjectedIncome() {
+            let total = 0;
+            const date = new Date();
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            
+            selectedDays.forEach(day => {
+                const dayOfWeek = new Date(year, month, day).getDay();
+                total += shiftIncomes[dayOfWeek];
+            });
+            
+            return total;
+        }
+
+        function generateSuggestions() {
+            const currentIncome = calculateProjectedIncome();
+            const needed = monthlyTarget - currentIncome;
+            const suggestionsList = document.getElementById('suggestionsList');
+            
+            if (needed <= 0) {
+                suggestionsList.innerHTML = '<div class="suggestion-item">✅ Goal achieved! You\'ve scheduled enough shifts.</div>';
+                return;
+            }
+            
+            const date = new Date();
+            const year = date.getFullYear();
+            const month = date.getMonth();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const currentDayNum = parseInt(document.getElementById('currentDate').value);
+            
+            // Find available days after current date
+            const availableDays = [];
+            for (let day = currentDayNum + 1; day <= daysInMonth; day++) {
+                if (!selectedDays.has(day)) {
+                    const dayOfWeek = new Date(year, month, day).getDay();
+                    availableDays.push({
+                        day: day,
+                        dayOfWeek: dayOfWeek,
+                        income: shiftIncomes[dayOfWeek],
+                        name: dayNames[dayOfWeek]
+                    });
+                }
+            }
+            
+            // Sort by income (highest first)
+            availableDays.sort((a, b) => b.income - a.income);
+            
+            // Generate suggestions
+            const suggestions = [];
+            let tempTotal = 0;
+            let suggestedDays = [];
+            
+            for (const dayInfo of availableDays) {
+                if (tempTotal < needed) {
+                    tempTotal += dayInfo.income;
+                    suggestedDays.push(dayInfo);
+                }
+            }
+            
+            if (suggestedDays.length > 0) {
+                suggestionsList.innerHTML = `
+                    <div class="suggestion-item">
+                        <span>Add these shifts to reach your goal:</span>
+                    </div>
+                `;
+                
+                suggestedDays.forEach(dayInfo => {
+                    const item = document.createElement('div');
+                    item.className = 'suggestion-item';
+                    item.innerHTML = `
+                        <span>${dayInfo.name} ${dayInfo.day}th</span>
+                        <span class="suggestion-days">+$${dayInfo.income}</span>
+                    `;
+                    suggestionsList.appendChild(item);
+                });
+                
+                const totalItem = document.createElement('div');
+                totalItem.className = 'suggestion-item';
+                totalItem.style.fontWeight = 'bold';
+                totalItem.innerHTML = `
+                    <span>Total Additional Income:</span>
+                    <span class="suggestion-days">+$${tempTotal}</span>
+                `;
+                suggestionsList.appendChild(totalItem);
+            } else {
+                suggestionsList.innerHTML = '<div class="suggestion-item">⚠️ Not enough available days to reach goal. Consider adjusting your target.</div>';
+            }
+        }
+
+        function resetCalendar() {
+            selectedDays.clear();
+            initCalendar();
+            generateSuggestions();
+        }
+
+        // Event listeners
+        document.getElementById('expenses').addEventListener('input', (e) => {
+            monthlyTarget = parseInt(e.target.value) || 0;
+            updateStats();
+            generateSuggestions();
+        });
+
+        document.getElementById('currentDate').addEventListener('input', (e) => {
+            currentDay = parseInt(e.target.value) || 1;
+            generateSuggestions();
+        });
+
+        // Initialize the app
+        initCalendar();
+        generateSuggestions();
+    </script>
+</body>
+</html>
